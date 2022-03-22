@@ -205,7 +205,7 @@ def world_analysis(in_filename, cachefolder=None, frame_period=None):
 
     return dat_filename, fs, f0, sp, ap, t, rms_x
 
-def process_world(in_signal, m, out_filename=None, cachefolder=None):
+def process_world(in_signal, m, out_filename=None, cachefolder=None, frame_period=None):
     """
     Processes **in_signal** according to parameters **m**, and return result or stores in **out_filename**.
 
@@ -226,7 +226,7 @@ def process_world(in_signal, m, out_filename=None, cachefolder=None):
     """
 
     try:
-        os.access(in_signal)
+        os.access(in_signal, os.R_OK)
         input_type = 'file'
     except TypeError as err:
         if len(in_signal)!=2:
@@ -235,17 +235,17 @@ def process_world(in_signal, m, out_filename=None, cachefolder=None):
             x, fs = in_signal
             input_type = 'seq'
 
+    if frame_period is None:
+        frame_period = pyworld.default_frame_period
 
     # Analysis
-    if input_ype=='file':
-        dat_filename, fs, f0, sp, ap, t, rms_x = world_analysis(in_filename, cachefolder, frame_period=None)
+    if input_type=='file':
+        in_filename = in_signal
+        dat_filename, fs, f0, sp, ap, t, rms_x = world_analysis(in_filename, cachefolder, frame_period)
     else:
         t = np.arange(len(x))/fs
         rms_x = rms(x)
-        f0, t, sp, ap = world_analysis_arr(x, fs, frame_period=None)
-
-    if frame_period is None:
-        frame_period = pyworld.default_frame_period
+        f0, t, sp, ap = world_analysis_arr(x, fs, frame_period)
 
     # Modification of decomposition
     m = parse_arguments(m)
