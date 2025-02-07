@@ -19,7 +19,7 @@ Use it as a module:
 import voicetransformer as vt
 
 m = {
-    "f0": "-5 st"
+    "f0": "-5 st",
     "vtl": "+ 1st"
 }
 
@@ -48,7 +48,7 @@ x, fs = sf.read("mysound.wav")
 y = x * 2
 
 m = {
-    "f0": "-5 st"
+    "f0": "-5 st",
     "vtl": "+ 1st"
 }
 

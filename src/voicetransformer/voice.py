@@ -423,7 +423,7 @@ class Fast2DInterp():
     default behaviour of ``RectBivariateSpline`` is kept, i.e. the closest value is
     returned.
 
-    The default type is ``linear``, which then makes use of ``scipy.interpolate.interp2d``.
+    The default type is ``linear``, which then makes use of ``RegularGridInterpolator``.
     With ``cubic``, the ``RectBivariateSpline`` is used.
 
     Note that the class is not so useful in the end when used with ``linear``, but
@@ -434,9 +434,16 @@ class Fast2DInterp():
         self.type = type
 
         if self.type=='cubic':
-            self.interpolant = spi.RectBivariateSpline(x, y, z)
+            self.interpolant = spi.RectBivariateSpline(x, y, z, bounds_error=False)
         elif self.type=='linear':
-            self.interpolant = spi.interp2d(y, x, z, kind='linear')
+            #self.interpolant = spi.interp2d(y, x, z, kind='linear')
+            self.interpolant_ = spi.RegularGridInterpolator(
+                (x, y),
+                z.T,
+                method='linear',
+                bounds_error=False
+            )
+            self.interpolant = lambda x, y: self.interpolant_(np.meshgrid(x, y, indexing='ij', sparse=True)).T
         else:
             raise ValueError('Interpolant type unknown: "%s"' % type)
 
@@ -444,6 +451,8 @@ class Fast2DInterp():
         self.y_range = (y[0], y[-1])
 
         # Out of range value:
+        if ofrv is None:
+            ofrv = np.min(z)
         self.ofrv = ofrv
 
     def is_in_range(self, w, r):
@@ -452,25 +461,26 @@ class Fast2DInterp():
     def __call__(self, x, y):
         return self.interp(x, y)
 
-    def interp_(self, x, y):
-        if self.type=='cubic':
-            return self.interpolant(x, y)
-        elif self.type=='linear':
-            return self.interpolant(y, x)
+    # def interp_(self, x, y):
+    #     if self.type=='cubic':
+    #         return self.interpolant(x, y)
+    #     elif self.type=='linear':
+    #         return self.interpolant(y, x)
 
     def interp(self, x, y):
         if (np.isscalar(x) or len(x)==1) and (np.isscalar(y) or len(y)==1):
             if self.ofrv is not None:
                 if self.is_in_range(x, self.x_range) and self.is_in_range(y, self.y_range):
-                    o = self.interp_(x, y)[0,0]
+                    o = self.interpolant(x, y)[0,0]
                 else:
                     o = self.ofrv
             else:
-                o = self.interp_(x, y)[0,0]
+                o = self.interpolant(x, y)[0,0]
         else:
-            o = self.interp_(x, y)
+            o = self.interpolant(x, y)
 
             if self.ofrv is not None:
+                xx, yy = np.meshgrid(x, y, indexing='ij', sparse=True)
                 s = np.logical_and(self.is_in_range(xx, self.x_range), self.is_in_range(yy, self.y_range))
                 o[s] = self.ofrv
 
