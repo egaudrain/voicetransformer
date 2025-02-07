@@ -214,7 +214,7 @@ def process_world(in_signal, m, out_filename=None, cachefolder=None, frame_perio
     The first step is to analyse the sound file to extract its f0, spectral envelope and
     aperiodicity map. The results of this operation are cached in a pickle file.
 
-    The parameters for this module are:
+    The parameters of the transformation are given in **m**, a dictionary with the following keys.
 
     :param f0: Either an absolute f0 value in Hertz ``{### Hz}``, a change in semitones ``{### st}`` or a ratio ``{\*###}``.
 
@@ -222,7 +222,7 @@ def process_world(in_signal, m, out_filename=None, cachefolder=None, frame_perio
 
     :param duration: Either an absolute duration in seconds ``{~###s}``, an offset in seconds ``{+/-###s}``, or a ratio ``{\*###}``.
 
-    Just to be clear, these parameters must be keys of the dictionary **m**.
+    All keys are optional: if not mentioned, the signal is unaltered along this dimension.
     """
 
     try:
