@@ -243,6 +243,7 @@ def process_world(in_signal, m, out_filename=None, cachefolder=None, frame_perio
         in_filename = in_signal
         dat_filename, fs, f0, sp, ap, t, rms_x = world_analysis(in_filename, cachefolder, frame_period)
     else:
+        in_filename = None
         t = np.arange(len(x))/fs
         rms_x = rms(x)
         f0, t, sp, ap = world_analysis_arr(x, fs, frame_period)
@@ -343,7 +344,10 @@ def process_world(in_signal, m, out_filename=None, cachefolder=None, frame_perio
 
     y, s = clipping_prevention(y)
     if s!=1:
-        LOG.info("[world (v%s)] Clipping was avoided during processing of '%s' to '%s' by rescaling with a factor of %.3f (%.1f dB)." % (pyworld.__version__, in_filename, out_filename, s, 20*np.log10(s)))
+        if in_filename is None:
+            LOG.info("[world (v%s)] Clipping was avoided during processing by rescaling with a factor of %.3f (%.1f dB)." % (pyworld.__version__, s, 20*np.log10(s)))
+        else:
+            LOG.info("[world (v%s)] Clipping was avoided during processing of '%s' to '%s' by rescaling with a factor of %.3f (%.1f dB)." % (pyworld.__version__, in_filename, out_filename, s, 20*np.log10(s)))
 
     if out_filename is None:
         return y, fs
@@ -434,25 +438,18 @@ class Fast2DInterp():
         self.type = type
 
         if self.type=='cubic':
-            self.interpolant = spi.RectBivariateSpline(x, y, z, bounds_error=False)
+            k = 3
         elif self.type=='linear':
-            #self.interpolant = spi.interp2d(y, x, z, kind='linear')
-            self.interpolant_ = spi.RegularGridInterpolator(
-                (x, y),
-                z.T,
-                method='linear',
-                bounds_error=False
-            )
-            self.interpolant = lambda x, y: self.interpolant_(np.meshgrid(x, y, indexing='ij', sparse=True)).T
+            k = 1
         else:
             raise ValueError('Interpolant type unknown: "%s"' % type)
+
+        self.interpolant = spi.RectBivariateSpline(x, y, z, kx=k, ky=k)
 
         self.x_range = (x[0], x[-1])
         self.y_range = (y[0], y[-1])
 
         # Out of range value:
-        if ofrv is None:
-            ofrv = np.min(z)
         self.ofrv = ofrv
 
     def is_in_range(self, w, r):
@@ -460,12 +457,6 @@ class Fast2DInterp():
 
     def __call__(self, x, y):
         return self.interp(x, y)
-
-    # def interp_(self, x, y):
-    #     if self.type=='cubic':
-    #         return self.interpolant(x, y)
-    #     elif self.type=='linear':
-    #         return self.interpolant(y, x)
 
     def interp(self, x, y):
         if (np.isscalar(x) or len(x)==1) and (np.isscalar(y) or len(y)==1):
@@ -480,7 +471,7 @@ class Fast2DInterp():
             o = self.interpolant(x, y)
 
             if self.ofrv is not None:
-                xx, yy = np.meshgrid(x, y, indexing='ij', sparse=True)
+                xx, yy = np.meshgrid(x, y, indexing='ij')
                 s = np.logical_and(self.is_in_range(xx, self.x_range), self.is_in_range(yy, self.y_range))
                 o[s] = self.ofrv
 
