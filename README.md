@@ -8,7 +8,7 @@ also offering a command line interface.
 ## Install
 
 ```
-pip install --update https://github.com/egaudrain/voicetransformer/archive/refs/heads/main.zip
+pip install -U https://github.com/egaudrain/voicetransformer/archive/refs/heads/main.zip
 ```
 
 ## Example
