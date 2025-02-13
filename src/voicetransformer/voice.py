@@ -10,7 +10,7 @@ Use it as a command line tool, or as a module using the `process_world` function
 ~~~~~~~~~~~~~~
 
 voicetransformer, a simple wrapper for pyworld
-Copyright (C) 2022 Etienne Gaudrain
+Copyright (C) 2025 Etienne Gaudrain
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
